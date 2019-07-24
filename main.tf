@@ -46,9 +46,11 @@ locals {
   engine_defaults = {
     mariadb = {
       version = "10.2.12"
+      license      = "generic-public-license"
     }
     mysql = {
       version = "5.7.21"
+      license      = "general-public-license"
     }
     oracle = {
       port         = "1521"
@@ -61,6 +63,7 @@ locals {
       port       = "5432"
       version    = "10.3"
       jdbc_proto = "postgresql"
+      license      = "postgresql-license"
     }
     sqlserver = {
       port         = "1433"
@@ -98,10 +101,7 @@ locals {
   )
   postgres_major_version = element(split(".", local.engine_version), 0)
 
-  license_model = coalesce(
-    var.license_model,
-    lookup(local.engine_defaults[local.engine_class], "license", ""),
-  )
+  license_model = coalesce(var.license_model,lookup(local.engine_defaults[local.engine_class], "license", ""))
 
   tags = {
     Name            = var.name
@@ -274,10 +274,7 @@ locals {
     var.existing_option_group_name,
     join("", aws_db_option_group.db_option_group.*.id),
   )
-  monitoring_role_arn = coalesce(
-    var.existing_monitoring_role,
-    join("", aws_iam_role.enhanced_monitoring_role.*.arn),
-  )
+  monitoring_role_arn = var.existing_monitoring_role != "" ? var.existing_monitoring_role : join("", aws_iam_role.enhanced_monitoring_role.*.arn)
 }
 
 resource "aws_db_instance" "db_instance" {
