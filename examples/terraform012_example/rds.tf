@@ -55,7 +55,7 @@ module "rds_master" {
   #   family                        = "mysql5.7"
   #   multi_az                      = false
   #   storage_encrypted             = false
-  #   kms_key_id                    = "arn:aws:kms:us-west-2:649747341128:key/44ff8a34-f234-45a1-809f-ecba974a44ca"
+  #   kms_key_id                    = "arn:aws:kms:us-west-2:12345678910:key/44ff8a34-FFFF-FFFF-FFFF-ecba974a44ca"
   #   parameters                    = []
   #   create_parameter_group        = true
   #   existing_parameter_group_name = "some-parameter-group-name"
@@ -67,23 +67,23 @@ module "rds_master" {
   # RDS Monitoring
   ##################
 
-#   notification_topic       = aws_sns_topic.my_test_sns.arn
-#   alarm_write_iops_limit   = 100
-#   alarm_read_iops_limit    = 100
-#   alarm_free_space_limit   = 1024000000
-#   alarm_cpu_limit          = 60
-#   monitoring_interval      = 0
-#   existing_monitoring_role = ""
+  #   notification_topic       = aws_sns_topic.my_test_sns.arn
+  #   alarm_write_iops_limit   = 100
+  #   alarm_read_iops_limit    = 100
+  #   alarm_free_space_limit   = 1024000000
+  #   alarm_cpu_limit          = 60
+  #   monitoring_interval      = 0
+  #   existing_monitoring_role = ""
 
   ##################
   # Other parameters
   ##################
 
-#   environment = "Development"
+  #   environment = "Development"
 
-#   tags = {
-#     SomeTag = "SomeValue"
-#   }
+  #   tags = {
+  #     SomeTag = "SomeValue"
+  #   }
 }
 
 ####################################################################################################
