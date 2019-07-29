@@ -140,13 +140,7 @@ locals {
 
   # MSSQL Family name only uses a single digit on the minor version number when setting the family (ex: sqlserver-se-14.0 , not sqlserver-se-14.00)
   major_version_substring = local.is_mssql ? substr(local.major_version, 0, length(local.major_version) - 1) : local.major_version
-  family = coalesce(
-    var.family,
-    join(
-      local.family_separator,
-      [var.engine, local.major_version_substring],
-    ),
-  )
+  family = coalesce(var.family, join(local.family_separator,[var.engine,local.major_version_substring]))
 }
 
 resource "aws_db_subnet_group" "db_subnet_group" {
@@ -262,18 +256,9 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring_policy" {
 }
 
 locals {
-  subnet_group = coalesce(
-    var.existing_subnet_group,
-    join("", aws_db_subnet_group.db_subnet_group.*.id),
-  )
-  parameter_group = coalesce(
-    var.existing_parameter_group_name,
-    join("", aws_db_parameter_group.db_parameter_group.*.id),
-  )
-  option_group = coalesce(
-    var.existing_option_group_name,
-    join("", aws_db_option_group.db_option_group.*.id),
-  )
+  subnet_group = var.existing_subnet_group != "" ? var.existing_subnet_group : join("", aws_db_subnet_group.db_subnet_group.*.id)
+  parameter_group = var.existing_parameter_group_name != "" ? var.existing_parameter_group_name : join("", aws_db_parameter_group.db_parameter_group.*.id)
+  option_group = var.existing_option_group_name != "" ? var.existing_option_group_name : join("", aws_db_option_group.db_option_group.*.id)
   monitoring_role_arn = var.existing_monitoring_role != "" ? var.existing_monitoring_role : join("", aws_iam_role.enhanced_monitoring_role.*.arn)
 }
 
