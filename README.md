@@ -6,15 +6,15 @@ This module creates an RDS instance.  It currently supports master, replica, and
 
 ```HCL
 module "rds" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rds?ref=v0.0.13"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-rds?ref=v0.12.0"
 
-  subnets           = "${module.vpc.private_subnets}" #  Required
-  security_groups   = ["${module.vpc.default_sg}"]    #  Required
-  name              = "sample-mysql-rds"              #  Required
   engine            = "mysql"                         #  Required
   instance_class    = "db.t2.large"                   #  Required
-  storage_encrypted = true                            #  Parameter defaults to false, but enabled for Cross Region Replication example
+  name              = "sample-mysql-rds"              #  Required
   password = "${data.aws_kms_secrets.rds_credentials.plaintext["password"]}" #  Required
+  security_groups   = ["${module.vpc.default_sg}"]    #  Required
+  storage_encrypted = true                            #  Parameter defaults to false, but enabled for Cross Region Replication example
+  subnets           = "${module.vpc.private_subnets}" #  Required
 }
 ```
 
@@ -22,6 +22,11 @@ Full working references are available at [examples](examples)
 ## Limitations
 
 - Terraform does not support joining a Microsoft SQL RDS instance to a Directory Service at this time.  This has been requested in https://github.com/terraform-providers/terraform-provider-aws/pull/5378 and can be added once that functionality is present.
+
+## Terraform 0.12 upgrade
+
+There should be no changes required to move from previous versions of this module to version 0.12.0 or higher.
+
 ## Other TF Modules Used
 Using [aws-terraform-cloudwatch_alarm](https://github.com/rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm) to create the following CloudWatch Alarms:
 	- free_storage_space_alarm_ticket
@@ -112,4 +117,3 @@ Using [aws-terraform-cloudwatch_alarm](https://github.com/rackspace-infrastructu
 | option\_group | The Option Group used by the DB Instance |
 | parameter\_group | The Parameter Group used by the DB Instance |
 | subnet\_group | The DB Subnet Group used by the DB Instance |
-
