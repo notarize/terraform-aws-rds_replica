@@ -123,6 +123,12 @@ variable "storage_size" {
   default     = ""
 }
 
+variable "max_storage_size" {
+  description = "Select Max RDS Volume Size in GB. Value other than 0 will enable storage autoscaling"
+  type        = number
+  default     = 0
+}
+
 variable "storage_type" {
   description = "Select RDS Volume Type."
   type        = "string"
@@ -245,6 +251,12 @@ variable "monitoring_interval" {
   description = "The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60."
   type        = "string"
   default     = 0
+}
+
+variable "rds_monitoring_role_arn_app" {
+  description = "The ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. Must be specified if monitoring_interval is non-zero."
+  type        = "string"
+  default     = "arn:aws:iam::596390022321:role/rds-monitoring-role"
 }
 
 variable "notification_topic" {
