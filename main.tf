@@ -284,12 +284,6 @@ resource "aws_db_instance" "db_instance" {
   username                            = var.username
   vpc_security_group_ids              = var.security_groups
 
-  timeouts {
-    create = var.db_instance_create_timeout
-    update = var.db_instance_update_timeout
-    delete = var.db_instance_delete_timeout
-  }
-
   # Option Group, Parameter Group, and Subnet Group added as the coalesce to use any existing groups seems to throw off
   # dependancies while destroying resources
   depends_on = [
