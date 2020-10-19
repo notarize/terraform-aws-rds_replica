@@ -238,7 +238,7 @@ variable "alarm_read_iops_limit" {
 variable "alarm_write_iops_limit" {
   description = "CloudWatch Write IOPSLimit Threshold"
   type        = "string"
-  default     = 100
+  default     = 500
 }
 
 variable "existing_monitoring_role" {
