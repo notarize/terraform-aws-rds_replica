@@ -284,6 +284,12 @@ resource "aws_db_instance" "db_instance" {
   username                            = var.username
   vpc_security_group_ids              = var.security_groups
 
+  timeouts {
+    create = var.db_instance_create_timeout
+    update = var.db_instance_update_timeout
+    delete = var.db_instance_delete_timeout
+  }
+
   # Option Group, Parameter Group, and Subnet Group added as the coalesce to use any existing groups seems to throw off
   # dependancies while destroying resources
   depends_on = [
@@ -295,7 +301,7 @@ resource "aws_db_instance" "db_instance" {
 }
 
 module "free_storage_space_alarm_ticket" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.2"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
 
   alarm_description        = "Free storage space has fallen below threshold, generating ticket."
   alarm_name               = "${var.name}-free-storage-space-ticket"
@@ -319,7 +325,7 @@ module "free_storage_space_alarm_ticket" {
 }
 
 module "replica_lag_alarm_ticket" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.2"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
 
   alarm_count              = var.read_replica ? 1 : 0
   alarm_description        = "ReplicaLag has exceeded threshold, generating ticket.."
@@ -344,7 +350,7 @@ module "replica_lag_alarm_ticket" {
 }
 
 module "free_storage_space_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.2"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
 
   alarm_description        = "Free storage space has fallen below threshold, sending email notification."
   alarm_name               = "${var.name}-free-storage-space-email"
@@ -357,7 +363,7 @@ module "free_storage_space_alarm_email" {
   period                   = 60
   rackspace_alarms_enabled = false
   statistic                = "Average"
-  threshold                = 30720000000
+  threshold                = 3072000000
 
   dimensions = [
     {
@@ -367,13 +373,13 @@ module "free_storage_space_alarm_email" {
 }
 
 module "write_iops_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.2"
+  source = "git@github.com:notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_description        = "Alarm if WriteIOPs > ${var.alarm_write_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-write-iops-high-email"
   comparison_operator      = "GreaterThanThreshold"
   customer_alarms_enabled  = true
-  evaluation_periods       = 10
+  evaluation_periods       = 5
   metric_name              = "WriteIOPS"
   namespace                = "AWS/RDS"
   notification_topic       = [var.notification_topic]
@@ -390,7 +396,7 @@ module "write_iops_high_alarm_email" {
 }
 
 module "read_iops_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.2"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
 
   alarm_description        = "Alarm if ReadIOPs > ${var.alarm_read_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-read-iops-high-email"
@@ -413,7 +419,7 @@ module "read_iops_high_alarm_email" {
 }
 
 module "cpu_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.2"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
 
   alarm_description        = "Alarm if CPU > ${var.alarm_cpu_limit} for 15 minutes"
   alarm_name               = "${var.name}-cpu-high-email"
@@ -436,7 +442,7 @@ module "cpu_high_alarm_email" {
 }
 
 module "replica_lag_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.2"
+  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
 
   alarm_count              = var.read_replica ? 1 : 0
   alarm_description        = "ReplicaLag has exceeded threshold."
