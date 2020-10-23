@@ -367,7 +367,7 @@ module "free_storage_space_alarm_email" {
 }
 
 module "write_iops_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.2"
+  source = "git@github.com:notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_description        = "Alarm if WriteIOPs > ${var.alarm_write_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-write-iops-high-email"
