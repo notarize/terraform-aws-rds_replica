@@ -152,7 +152,7 @@ variable "auto_minor_version_upgrade" {
 variable "create_option_group" {
   description = "A boolean variable noting if a new option group should be created."
   type        = "string"
-  default     = true
+  default     = false
 }
 
 variable "create_parameter_group" {
