@@ -103,7 +103,6 @@ locals {
 
   tags = {
     Name            = var.name
-    ServiceProvider = "Rackspace"
     Environment     = var.environment
   }
 
@@ -156,16 +155,17 @@ resource "aws_db_parameter_group" "db_parameter_group" {
   description = "Database parameter group for ${var.name}"
   name_prefix = "${var.name}-"
   family      = local.family
-  tags        = merge(var.tags, local.tags)
 
   dynamic "parameter" {
-    for_each = concat(var.parameters, local.parameters[local.parameter_lookup])
+    for_each = var.parameters
     content {
-      apply_method = lookup(parameter.value, "apply_method", null)
       name         = parameter.value.name
       value        = parameter.value.value
+      apply_method = lookup(parameter.value, "apply_method", null)
     }
   }
+
+  tags        = merge(var.tags, local.tags)
 
   lifecycle {
     create_before_destroy = true
@@ -182,10 +182,10 @@ resource "aws_db_option_group" "db_option_group" {
   tags                     = merge(var.tags, local.tags)
 
   dynamic "option" {
-    for_each = concat(var.options, local.options)
+    for_each = var.options
     content {
-      db_security_group_memberships  = lookup(option.value, "db_security_group_memberships", null)
       option_name                    = option.value.option_name
+      db_security_group_memberships  = lookup(option.value, "db_security_group_memberships", null)
       port                           = lookup(option.value, "port", null)
       version                        = lookup(option.value, "version", null)
       vpc_security_group_memberships = lookup(option.value, "vpc_security_group_memberships", null)
@@ -237,15 +237,13 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring_policy" {
 
 locals {
   subnet_group        = length(aws_db_subnet_group.db_subnet_group.*.id) > 0 ? aws_db_subnet_group.db_subnet_group[0].id : var.existing_subnet_group
-  parameter_group     = length(aws_db_parameter_group.db_parameter_group.*.id) > 0 ? aws_db_parameter_group.db_parameter_group[0].id : var.existing_parameter_group_name
-  option_group        = length(aws_db_option_group.db_option_group.*.id) > 0 ? aws_db_option_group.db_option_group[0].id : var.existing_option_group_name
   monitoring_role_arn = length(aws_iam_role.enhanced_monitoring_role.*.arn) > 0 ? aws_iam_role.enhanced_monitoring_role[0].arn : var.existing_monitoring_role
 }
 
 resource "aws_db_instance" "db_instance" {
 
   allocated_storage                   = local.storage_size
-  allow_major_version_upgrade         = false
+  allow_major_version_upgrade         = true
   apply_immediately                   = var.apply_immediately
   auto_minor_version_upgrade          = var.auto_minor_version_upgrade
   backup_retention_period             = var.read_replica ? 0 : var.backup_retention_period
@@ -268,9 +266,10 @@ resource "aws_db_instance" "db_instance" {
   monitoring_interval                 = var.monitoring_interval
   monitoring_role_arn                 = var.monitoring_interval > 0 ? local.monitoring_role_arn : null
   multi_az                            = var.read_replica ? false : var.multi_az
+  performance_insights_enabled        = var.performance_insights_enabled
   name                                = var.dbname
-  option_group_name                   = local.same_region_replica ? null : local.option_group
-  parameter_group_name                = local.same_region_replica ? null : local.parameter_group
+  option_group_name                   = var.existing_option_group_name
+  parameter_group_name                = var.existing_parameter_group_name
   password                            = var.password
   port                                = local.port
   publicly_accessible                 = var.publicly_accessible
@@ -284,12 +283,6 @@ resource "aws_db_instance" "db_instance" {
   username                            = var.username
   vpc_security_group_ids              = var.security_groups
 
-  timeouts {
-    create = var.db_instance_create_timeout
-    update = var.db_instance_update_timeout
-    delete = var.db_instance_delete_timeout
-  }
-
   # Option Group, Parameter Group, and Subnet Group added as the coalesce to use any existing groups seems to throw off
   # dependancies while destroying resources
   depends_on = [
@@ -301,7 +294,7 @@ resource "aws_db_instance" "db_instance" {
 }
 
 module "free_storage_space_alarm_ticket" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_description        = "Free storage space has fallen below threshold, generating ticket."
   alarm_name               = "${var.name}-free-storage-space-ticket"
@@ -325,7 +318,7 @@ module "free_storage_space_alarm_ticket" {
 }
 
 module "replica_lag_alarm_ticket" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_count              = var.read_replica ? 1 : 0
   alarm_description        = "ReplicaLag has exceeded threshold, generating ticket.."
@@ -350,7 +343,7 @@ module "replica_lag_alarm_ticket" {
 }
 
 module "free_storage_space_alarm_email" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_description        = "Free storage space has fallen below threshold, sending email notification."
   alarm_name               = "${var.name}-free-storage-space-email"
@@ -363,7 +356,7 @@ module "free_storage_space_alarm_email" {
   period                   = 60
   rackspace_alarms_enabled = false
   statistic                = "Average"
-  threshold                = 3072000000
+  threshold                = 30720000000
 
   dimensions = [
     {
@@ -373,13 +366,13 @@ module "free_storage_space_alarm_email" {
 }
 
 module "write_iops_high_alarm_email" {
-  source = "git@github.com:notarize/terraform-aws-cloudwatch_alarm-replica.git"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_description        = "Alarm if WriteIOPs > ${var.alarm_write_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-write-iops-high-email"
   comparison_operator      = "GreaterThanThreshold"
   customer_alarms_enabled  = true
-  evaluation_periods       = 5
+  evaluation_periods       = 10
   metric_name              = "WriteIOPS"
   namespace                = "AWS/RDS"
   notification_topic       = [var.notification_topic]
@@ -396,7 +389,7 @@ module "write_iops_high_alarm_email" {
 }
 
 module "read_iops_high_alarm_email" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_description        = "Alarm if ReadIOPs > ${var.alarm_read_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-read-iops-high-email"
@@ -419,7 +412,7 @@ module "read_iops_high_alarm_email" {
 }
 
 module "cpu_high_alarm_email" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_description        = "Alarm if CPU > ${var.alarm_cpu_limit} for 15 minutes"
   alarm_name               = "${var.name}-cpu-high-email"
@@ -442,7 +435,7 @@ module "cpu_high_alarm_email" {
 }
 
 module "replica_lag_alarm_email" {
-  source = "git@github.com:rackspace-infrastructure-automation/aws-terraform-cloudwatch_alarm?ref=v0.12.0"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git"
 
   alarm_count              = var.read_replica ? 1 : 0
   alarm_description        = "ReplicaLag has exceeded threshold."
