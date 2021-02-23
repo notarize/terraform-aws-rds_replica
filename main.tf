@@ -448,7 +448,7 @@ module "replica_lag_alarm_email" {
   alarm_name               = "${var.name}-replica-lag-email"
   comparison_operator      = "GreaterThanOrEqualToThreshold"
   customer_alarms_enabled  = true
-  evaluation_periods       = 3
+  evaluation_periods       = 5
   metric_name              = "ReplicaLag"
   namespace                = "AWS/RDS"
   notification_topic       = [var.notification_topic]
