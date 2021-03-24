@@ -244,7 +244,7 @@ locals {
 resource "aws_db_instance" "db_instance" {
 
   allocated_storage                   = local.storage_size
-  allow_major_version_upgrade         = false
+  allow_major_version_upgrade         = true
   apply_immediately                   = var.apply_immediately
   auto_minor_version_upgrade          = var.auto_minor_version_upgrade
   backup_retention_period             = var.read_replica ? 0 : var.backup_retention_period
@@ -283,6 +283,12 @@ resource "aws_db_instance" "db_instance" {
   username                            = var.username
   vpc_security_group_ids              = var.security_groups
 
+  timeouts {
+    create = var.db_instance_create_timeout
+    update = var.db_instance_update_timeout
+    delete = var.db_instance_delete_timeout
+  }
+
   # Option Group, Parameter Group, and Subnet Group added as the coalesce to use any existing groups seems to throw off
   # dependancies while destroying resources
   depends_on = [
@@ -294,7 +300,7 @@ resource "aws_db_instance" "db_instance" {
 }
 
 module "free_storage_space_alarm_ticket" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.1"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
 
   alarm_description        = "Free storage space has fallen below threshold, generating ticket."
   alarm_name               = "${var.name}-free-storage-space-ticket"
@@ -318,7 +324,7 @@ module "free_storage_space_alarm_ticket" {
 }
 
 module "replica_lag_alarm_ticket" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.1"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
 
   alarm_count              = var.read_replica ? 1 : 0
   alarm_description        = "ReplicaLag has exceeded threshold, generating ticket.."
@@ -343,7 +349,7 @@ module "replica_lag_alarm_ticket" {
 }
 
 module "free_storage_space_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.1"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
 
   alarm_description        = "Free storage space has fallen below threshold, sending email notification."
   alarm_name               = "${var.name}-free-storage-space-email"
@@ -366,7 +372,7 @@ module "free_storage_space_alarm_email" {
 }
 
 module "write_iops_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.1"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
 
   alarm_description        = "Alarm if WriteIOPs > ${var.alarm_write_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-write-iops-high-email"
@@ -389,7 +395,7 @@ module "write_iops_high_alarm_email" {
 }
 
 module "read_iops_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm.git?ref=v.0.0.1"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
 
   alarm_description        = "Alarm if ReadIOPs > ${var.alarm_read_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-read-iops-high-email"
@@ -410,7 +416,54 @@ module "read_iops_high_alarm_email" {
     },
   ]
 }
-  
+
+module "cpu_high_alarm_email" {
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+
+  alarm_description        = "Alarm if CPU > ${var.alarm_cpu_limit} for 15 minutes"
+  alarm_name               = "${var.name}-cpu-high-email"
+  comparison_operator      = "GreaterThanThreshold"
+  customer_alarms_enabled  = true
+  evaluation_periods       = 15
+  metric_name              = "CPUUtilization"
+  namespace                = "AWS/RDS"
+  notification_topic       = [var.notification_topic]
+  period                   = 60
+  rackspace_alarms_enabled = false
+  statistic                = "Average"
+  threshold                = var.alarm_cpu_limit
+
+  dimensions = [
+    {
+      DBInstanceIdentifier = aws_db_instance.db_instance.id
+    },
+  ]
+}
+
+module "replica_lag_alarm_email" {
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+
+  alarm_count              = var.read_replica ? 1 : 0
+  alarm_description        = "ReplicaLag has exceeded threshold."
+  alarm_name               = "${var.name}-replica-lag-email"
+  comparison_operator      = "GreaterThanOrEqualToThreshold"
+  customer_alarms_enabled  = true
+  evaluation_periods       = 5
+  metric_name              = "ReplicaLag"
+  namespace                = "AWS/RDS"
+  notification_topic       = [var.notification_topic]
+  period                   = 60
+  rackspace_alarms_enabled = false
+  statistic                = "Average"
+  threshold                = 3600
+
+  dimensions = [
+    {
+      DBInstanceIdentifier = aws_db_instance.db_instance.id
+    },
+  ]
+}
+
 resource "aws_db_event_subscription" "default" {
   count = length(var.event_categories) > 0 ? 1 : 0
 
