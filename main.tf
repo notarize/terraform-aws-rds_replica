@@ -300,7 +300,7 @@ resource "aws_db_instance" "db_instance" {
 }
 
 module "free_storage_space_alarm_ticket" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.3"
 
   alarm_description        = "Free storage space has fallen below threshold, generating ticket."
   alarm_name               = "${var.name}-free-storage-space-ticket"
@@ -324,7 +324,7 @@ module "free_storage_space_alarm_ticket" {
 }
 
 module "replica_lag_alarm_ticket" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.3"
 
   alarm_count              = var.read_replica ? 1 : 0
   alarm_description        = "ReplicaLag has exceeded threshold, generating ticket.."
@@ -349,7 +349,7 @@ module "replica_lag_alarm_ticket" {
 }
 
 module "free_storage_space_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.3"
 
   alarm_description        = "Free storage space has fallen below threshold, sending email notification."
   alarm_name               = "${var.name}-free-storage-space-email"
@@ -372,7 +372,7 @@ module "free_storage_space_alarm_email" {
 }
 
 module "write_iops_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.3"
 
   alarm_description        = "Alarm if WriteIOPs > ${var.alarm_write_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-write-iops-high-email"
@@ -395,7 +395,7 @@ module "write_iops_high_alarm_email" {
 }
 
 module "read_iops_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.3"
 
   alarm_description        = "Alarm if ReadIOPs > ${var.alarm_read_iops_limit} for 5 minutes"
   alarm_name               = "${var.name}-read-iops-high-email"
@@ -418,7 +418,7 @@ module "read_iops_high_alarm_email" {
 }
 
 module "cpu_high_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.3"
 
   alarm_description        = "Alarm if CPU > ${var.alarm_cpu_limit} for 15 minutes"
   alarm_name               = "${var.name}-cpu-high-email"
@@ -441,7 +441,7 @@ module "cpu_high_alarm_email" {
 }
 
 module "replica_lag_alarm_email" {
-  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.2"
+  source = "git@github.com:/notarize/terraform-aws-cloudwatch_alarm-replica.git?ref=v0.0.3"
 
   alarm_count              = var.read_replica ? 1 : 0
   alarm_description        = "ReplicaLag has exceeded threshold."
