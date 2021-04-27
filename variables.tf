@@ -152,7 +152,7 @@ variable "auto_minor_version_upgrade" {
 variable "create_option_group" {
   description = "A boolean variable noting if a new option group should be created."
   type        = "string"
-  default     = false
+  default     = true
 }
 
 variable "create_parameter_group" {
@@ -232,13 +232,13 @@ variable "alarm_free_space_limit" {
 variable "alarm_read_iops_limit" {
   description = "CloudWatch Read IOPSLimit Threshold"
   type        = "string"
-  default     = 100
+  default     = 1700
 }
 
 variable "alarm_write_iops_limit" {
   description = "CloudWatch Write IOPSLimit Threshold"
   type        = "string"
-  default     = 600
+  default     = 700
 }
 
 variable "existing_monitoring_role" {
